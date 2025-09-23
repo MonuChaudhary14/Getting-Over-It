@@ -3,7 +3,7 @@ const ctx = canvas.getContext('2d');
 const CW = canvas.width = 800
 const CH = canvas.height = 700
 
-let gameSpeed = 0;
+let gameSpeed = 4;
 
 const back1 = new Image();
 back1.src = './assets/layer-1.png';
@@ -25,26 +25,35 @@ class Layer {
         this.x2 = this.w;
         this.image = image;
         this.speedMod = speedMod;
-        this.speed = speedMod * gameSpeed;
+        this.speed = this.speedMod * gameSpeed;
     }
     update(){
-
+        this.speed = this.speedMod * gameSpeed;
+        if(this.x < -this.w){ this.x = this.w - gameSpeed + this.x2}
+        if(this.x2 < -this.w){ this.x2 = this.w - gameSpeed + this.x}
+        this.x = Math.floor(this.x -this.speed)
+        this.x2 = Math.floor(this.x2 -this.speed)
     }
     draw(){
-        
+        ctx.drawImage(this.image,this.x , this.y , this.w , this.h)
+        ctx.drawImage(this.image,this.x2 , this.y , this.w , this.h)
     }
 }
 
+const layer1 = new Layer(back1,0.2);
+const layer2 = new Layer(back2,0.4);
+const layer3 = new Layer(back3,0.6);
+// const layer4 = new Layer(back4,0.8);
+const layer5 = new Layer(back5,1);
+
+const layers = [layer1,layer2,layer3,layer5];
+
 function anim(){
-    if(x<-2400) x=2400 -gameSpeed + x2;
-    else x -= gameSpeed;
-    if(x2 <-2400) x2 = 2400 +x -gameSpeed;
-    else x2 -= gameSpeed;
     ctx.clearRect(0,0,CW,CH);
-    ctx.drawImage(back1,0,0);
-    ctx.drawImage(back4,x2,0);
-    ctx.drawImage(back3,x,0);
-    
+    layers.forEach(ob =>{
+        ob.update();
+        ob.draw();
+    })
     requestAnimationFrame(anim);
 }
 anim();
