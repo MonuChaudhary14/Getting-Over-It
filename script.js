@@ -43,7 +43,6 @@ class Layer {
 const layer1 = new Layer(back1,0.2);
 const layer2 = new Layer(back2,0.4);
 const layer3 = new Layer(back3,0.6);
-// const layer4 = new Layer(back4,0.8);
 const layer5 = new Layer(back5,1);
 
 const layers = [layer1,layer2,layer3,layer5];
