@@ -55,4 +55,33 @@ function anim(){
     })
     requestAnimationFrame(anim);
 }
+//feature1 popup message
+class FallMessage {
+    constructor() {
+        this.messages = [
+            "Oops!you fall!",
+            "beter luck next time!",
+            "you lose!",
+            "gravity wins!"
+
+        ];
+        this.popup = document.getElementById("popup");
+    }
+    show() {
+        const msg = this.messages[Math.floor(Math.random() * this.messages.length)];
+        this.popup.innerText = msg;
+        this.popup.style.display = "block";
+        setTimeout(() => this.popup.style.display = "none", 2000);
+    }
+}
+if (player.isFalling()) {
+    FallMessage.show();
+}
+//feature2 sound effect
+const hammersound =[new Audio(), new Audio(), new Audio()];
+function hammercollision(){
+    const sound = hammersound[Math.floor(Math.random() * hammersound.length)]; 
+    sound.currentTime = 0 ; 
+    sound.play();
+}
 anim();
