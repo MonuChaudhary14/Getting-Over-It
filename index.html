@@ -4,8 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Getting Over It</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
+    <div id="gameContainer">
+        <canvas id="canvas" width="1000" height="600"></canvas>
+        <script src="logic.js"></script>
+        <div id="ui">
+            <div>Height: <span id="height">0</span>m</div>
+            <div>Time: <span id="time">0:00</span></div>
+        </div>
+        
+        <div id="instructions">
+            Move mouse to swing hammer
+        </div>
+    </div>
 </body>
 </html>
