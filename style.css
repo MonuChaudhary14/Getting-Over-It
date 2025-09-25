@@ -14,7 +14,55 @@ body {
     min-height: 100vh;
 }
 
-#gameContainer {
+.startingscreen {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2rem;
+    align-items: center;
+    text-align: center;
+}
+
+.title {
+    font-size: 5rem;
+    font-weight: bold;
+    color: #222;
+    text-shadow: 2px 2px 4px rgba(17, 17, 17, 0.5);
+}
+
+.how-to-play-container {
+    background: black;
+    color: #00ffcc;
+    padding: 1.5rem 2rem;
+    border-radius: 10px;
+    line-height: 1.6;
+    font-size: 1.2rem;
+    box-shadow: 0 8px 20px rgba(16, 15, 15, 0.5);
+}
+
+.mouse-button {
+    color: #e6ba0b;
+    font-weight: bold;
+}
+
+.button {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+    background-color: #14e2b8;
+    color: black;
+    padding: 0.8rem 2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.button:hover {
+    background-color: #00ccaa;
+    transform: scale(1.05);
+}
+
+.game-container {
     position: relative;
     border: 3px solid #333;
     border-radius: 10px;
@@ -24,11 +72,10 @@ body {
 
 #gameCanvas {
     display: block;
-    background: linear-gradient(to bottom, #87CEEB, #228B22);
     cursor: crosshair;
 }
 
-#ui {
+.ui {
     position: absolute;
     top: 10px;
     left: 10px;
@@ -38,7 +85,7 @@ body {
     z-index: 10;
 }
 
-#instructions {
+.instructions {
     position: absolute;
     bottom: 10px;
     left: 10px;
@@ -51,19 +98,3 @@ body {
 .hidden {
     display: none;
 }
-#buttons{
-    text-align: right;
-    margin: 10px 10px;
-}
-button{
-    font-size:16px;
-    font-weight:bold;
-    background:none;
-    color:white;
-}
-#play{
-    background-color:rgb(85, 176, 67);
-    padding:2px;
-    border-radius:5px;
-}
-
