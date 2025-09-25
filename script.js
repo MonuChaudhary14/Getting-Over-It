@@ -1,37 +1,54 @@
 
-var mouseX, mouseY, mouseDown
-mouseX = 0
-mouseY = 0
-var startX = window.innerWidth / 2
-var startY = window.innerHeight / 1.5
+var mouseX, mouseY, mouseDown;
+mouseX = 0;
+mouseY = 0;
+var canvas = document.getElementById('gameCanvas');
+var ctx = canvas.getContext('2d');
+
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+var startX = window.innerWidth / 2;
+var startY = window.innerHeight / 1.5;
+
+function flipAngle(theta) {
+    return Math.acos(1 - Math.cos(theta));
+}
+
+function PI(mul) {
+    return Math.PI * mul;
+}
 
 function getTriangle(a, b, c) {
-    let A, B, C
-    A = Math.acos(((b ** 2) + (c ** 2) - (a ** 2)) / (2 * b * c))
-    B = Math.acos(((a ** 2) + (c ** 2) - (b ** 2)) / (2 * a * c))
-    C = Math.acos(((b ** 2) + (a ** 2) - (c ** 2)) / (2 * b * a))
-    return [A, B, C]
+    let A, B, C;
+    A = Math.acos(((b ** 2) + (c ** 2) - (a ** 2)) / (2 * b * c));
+    B = Math.acos(((a ** 2) + (c ** 2) - (b ** 2)) / (2 * a * c));
+    C = Math.acos(((b ** 2) + (a ** 2) - (c ** 2)) / (2 * b * a));
+    return [A, B, C];
 }
 
 function rotate(angle, delta) {
-    let theta = angle + delta
+    let theta = angle + delta;
     if (theta > Math.PI) {
-        theta = theta - Math.PI
-        theta = Math.PI - theta
-        theta = theta * -1
+        theta = theta - Math.PI;
+        theta = Math.PI - theta;
+        theta = theta * -1;
     }
     if (theta < -1 * Math.PI) {
-        theta = theta * -1
-        theta = theta - Math.PI
-        theta = Math.PI - theta
+        theta = theta * -1;
+        theta = theta - Math.PI;
+        theta = Math.PI - theta;
     }
-    return theta
+    return theta;
 }
+
 function getDir(x1, y1, x2, y2) {
-    var dx = y2 - y1
-    var dy = x2 - x1
-    return Math.atan2(dy, dx)
+    var dx = y2 - y1;
+    var dy = x2 - x1;
+    return Math.atan2(dy, dx);
 }
+
 function getDist(x1, y1, x2, y2) {
     let dx = x2 - x1;
     let dy = y2 - y1;
@@ -41,368 +58,446 @@ function getDist(x1, y1, x2, y2) {
 document.addEventListener('mousedown', e => {
     mouseDown = true;
 });
+
 document.addEventListener('mousemove', e => {
-    mouseX = e.offsetX;
-    mouseY = e.offsetY;
+    mouseX = e.clientX;
+    mouseY = e.clientY;
 });
+
 document.addEventListener('mouseup', e => {
     mouseDown = false;
 });
 
-var draw = SVG().addTo('body').size('100%', '100%')
+document.addEventListener('keydown', e => {
+    console.log(e.key);
+    player.yVel += 1;
+});
 
-var sky = draw.rect('100%', '100%').fill({
-    color: 'url(#skyGradient)'
-})
+document.addEventListener('wheel', e => {
+    mapOffsetX += e.deltaX * -0.5;
+    mapOffsetY += e.deltaY * -0.5;
+});
 
-var skyGradient = draw.defs().gradient('linear', function (add) {
-    add.stop(0, '#1a1a2e')
-    add.stop(0.4, '#16213e')
-    add.stop(0.8, '#0f3460')
-    add.stop(1, '#533483')
-}).id('skyGradient')
 
-sky.fill('url(#skyGradient)')
-sky.back()
+var mapOffsetX = 0;
+var mapOffsetY = 0;
 
-for (let i = 0; i < 30; i++) {
-    let star = draw.circle(Math.random() * 2 + 1)
-        .center(Math.random() * window.innerWidth, Math.random() * window.innerHeight * 0.7)
-        .fill('#ffffff')
-        .opacity(Math.random() * 0.6 + 0.3)
-    star.back()
+function drawSky() {
+
+    var gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, '#1a1a2e');
+    gradient.addColorStop(0.4, '#16213e');
+    gradient.addColorStop(0.8, '#0f3460');
+    gradient.addColorStop(1, '#533483');
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
-var moon = draw.circle(60)
-    .center(window.innerWidth * 0.85, window.innerHeight * 0.15)
-    .fill('#f5f5dc')
-    .stroke({ width: 1, color: '#e6e6b8' })
-moon.back()
+function drawStars() {
+    ctx.fillStyle = '#ffffff';
+    for (let i = 0; i < 30; i++) {
+        ctx.globalAlpha = Math.random() * 0.6 + 0.3;
+        let x = Math.random() * canvas.width;
+        let y = Math.random() * canvas.height * 0.7;
+        let radius = Math.random() * 2 + 1;
 
-for (let i = 0; i < 5; i++) {
-    let cloud = draw.ellipse(80 + Math.random() * 40, 30 + Math.random() * 20)
-        .center(Math.random() * window.innerWidth, Math.random() * window.innerHeight * 0.4)
-        .fill('#2a2a4a')
-        .opacity(0.4)
-    cloud.back()
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
 }
 
-var map = []
-var mapGroup = draw.group()
-var origin = draw.rect(0, 0).move(0, 0).fill("#eee").opacity(0)
-mapGroup.add(origin)
-draw.toggleClass("svg")
+function drawMoon() {
+    ctx.fillStyle = '#f5f5dc';
+    ctx.strokeStyle = '#e6e6b8';
+    ctx.lineWidth = 1;
+
+    let x = canvas.width * 0.85;
+    let y = canvas.height * 0.15;
+
+    ctx.beginPath();
+    ctx.arc(x, y, 30, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+}
+
+function drawClouds() {
+    ctx.fillStyle = '#2a2a4a';
+    ctx.globalAlpha = 0.4;
+
+    for (let i = 0; i < 5; i++) {
+        let x = Math.random() * canvas.width;
+        let y = Math.random() * canvas.height * 0.4;
+        let w = 80 + Math.random() * 40;
+        let h = 30 + Math.random() * 20;
+
+        ctx.beginPath();
+        ctx.ellipse(x, y, w / 2, h / 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+}
+
+var map = [];
 
 class Obstacle {
     touching(box) {
-        if ((box.x <= this.box.x2 && box.x2 >= this.box.x) && (box.y <= this.box.y2 && box.y2 >= this.box.y)) { return true }
-    }
-    constructor(x, y, w, h) {
-        this.body = draw.rect(w, h).move(x, y).fill('#0a5a0a').stroke({ width: 1, color: '#0a4a0a' })
-        mapGroup.add(this.body)
-        this.box = {
-            x: this.body.bbox().x,
-            y: this.body.bbox().y,
-            x2: this.body.bbox().x2,
-            y2: this.body.bbox().y2,
+        if ((box.x <= this.box.x2 && box.x2 >= this.box.x) &&
+            (box.y <= this.box.y2 && box.y2 >= this.box.y)) {
+            return true;
         }
-        map.push(this.box)
+    }
+
+    constructor(x, y, w, h) {
+        this.x = x;
+        this.y = y;
+        this.width = w;
+        this.height = h;
+        this.box = {
+            x: x,
+            y: y,
+            x2: x + w,
+            y2: y + h,
+        };
+        map.push(this.box);
+    }
+
+    draw() {
+        ctx.fillStyle = '#0a5a0a';
+        ctx.strokeStyle = '#0a4a0a';
+        ctx.lineWidth = 1;
+
+        let drawX = this.x + mapOffsetX;
+        let drawY = this.y + mapOffsetY;
+
+        ctx.fillRect(drawX, drawY, this.width, this.height);
+        ctx.strokeRect(drawX, drawY, this.width, this.height);
     }
 }
 
 class Player {
     update() {
-        mapGroup.dmove(this.xVel * -1, this.yVel)
-        this.orient()
-        this.physics()
+        mapOffsetX += this.xVel;
+        mapOffsetY += this.yVel * -1;
+        this.orient();
+        this.physics();
     }
+
     physics() {
-        let hit = map.find(o => player.touching(o))
-        let hammerHit = map.find(o => player.touchingHammer(o))
+        let hit = map.find(o => player.touching(o));
+        let hammerHit = map.find(o => player.touchingHammer(o));
+
         if (hit !== undefined) {
-            if (this.getBoxDiff(hit).y !== undefined) this.yVel = this.getBoxDiff(hit).y
-            else {
-                this.xVel = this.getBoxDiff(hit).x
-                this.yVel += -.24
+            if (this.getBoxDiff(hit).y !== undefined) {
+                this.yVel = this.getBoxDiff(hit).y;
+            } else {
+                this.xVel = this.getBoxDiff(hit).x;
+                this.yVel += -0.24;
             }
+        } else {
+            this.yVel += -0.24;
         }
-        else this.yVel += -.24
+
         if (hammerHit !== undefined) {
             if (this.getHammerDiff(hammerHit).y !== undefined) {
-                if (Math.abs(this.getHammerDiff(hammerHit).y) > this.yVel)
-                    this.yVel = this.getHammerDiff(hammerHit).y
-                this.xVel = this.prevPos.x - this.hammer.cx()
-            }
-            else {
-                this.xVel = this.getHammerDiff(hammerHit).x
-                this.yVel = -this.prevPos.y + this.hammer.cy()
+                if (Math.abs(this.getHammerDiff(hammerHit).y) > this.yVel) {
+                    this.yVel = this.getHammerDiff(hammerHit).y;
+                }
+                this.xVel = this.prevPos.x - this.hammerCenter.x;
+            } else {
+                this.xVel = this.getHammerDiff(hammerHit).x;
+                this.yVel = -this.prevPos.y + this.hammerCenter.y;
             }
         }
+
         if (hit !== undefined) {
-            if (this.getBoxDiff(hit).y !== undefined && Math.abs(this.getBoxDiff(hit).y) / this.getBoxDiff(hit).y === Math.abs(this.yVel) / this.yVel) this.yVel = this.getBoxDiff(hit).y
-            else if (Math.abs(this.getBoxDiff(hit).x) / this.getBoxDiff(hit).x === Math.abs(this.xVel) / this.xVel) {
-                this.xVel = this.getBoxDiff(hit).x
+            if (this.getBoxDiff(hit).y !== undefined &&
+                Math.abs(this.getBoxDiff(hit).y) / this.getBoxDiff(hit).y ===
+                Math.abs(this.yVel) / this.yVel) {
+                this.yVel = this.getBoxDiff(hit).y;
+            } else if (Math.abs(this.getBoxDiff(hit).x) / this.getBoxDiff(hit).x ===
+                Math.abs(this.xVel) / this.xVel) {
+                this.xVel = this.getBoxDiff(hit).x;
             }
         }
-        this.prevPos = { x: this.hammer.cx(), y: this.hammer.cy() }
-        if (this.xVel > 5) this.xVel = 5
-        if (this.xVel < -5) this.xVel = -5
-        if (this.yVel > 5) this.yVel = 5
+
+        this.prevPos = { x: this.hammerCenter.x, y: this.hammerCenter.y };
+
+        if (this.xVel > 5) this.xVel = 5;
+        if (this.xVel < -5) this.xVel = -5;
+        if (this.yVel > 5) this.yVel = 5;
     }
+
     orient() {
-        let leftEnd, rightEnd
-        let leftStart = { x: startX - 5.5, y: startY - 23 }
-        let rightStart = { x: startX + 5.5, y: startY - 23 }
-        let hammerCenter, dist
-        dist = getDist(startX, startY - 23, mouseX, mouseY)
+        let leftStart = { x: startX - 5.5, y: startY - 23 };
+        let rightStart = { x: startX + 5.5, y: startY - 23 };
+        let hammerCenter, dist;
+
+        dist = getDist(startX, startY - 23, mouseX, mouseY);
+
         if (dist >= 64.5) {
-            let dir = getDir(startX, startY - 23, mouseX, mouseY)
+            let dir = getDir(startX, startY - 23, mouseX, mouseY);
             hammerCenter = {
                 x: startX + Math.sin(dir) * 39.5,
                 y: (startY - 23) + Math.cos(dir) * 39.5
-            }
-        }
-        else if (dist >= 39.5) {
-            let dir = getDir(startX, startY - 23, mouseX, mouseY)
+            };
+        } else if (dist >= 39.5) {
+            let dir = getDir(startX, startY - 23, mouseX, mouseY);
             hammerCenter = {
                 x: startX + Math.sin(dir) * (dist - 25),
                 y: (startY - 23) + Math.cos(dir) * (dist - 25)
-            }
-        }
-        else {
-            let dir = getDir(startX, startY - 23, mouseX, mouseY)
+            };
+        } else {
+            let dir = getDir(startX, startY - 23, mouseX, mouseY);
             hammerCenter = {
                 x: startX + Math.sin(dir) * 14.5,
                 y: (startY - 23) + Math.cos(dir) * 14.5
-            }
+            };
         }
-        let rightDir = getDir(rightStart.x, rightStart.y, mouseX, mouseY)
-        let leftDir = getDir(leftStart.x, leftStart.y, mouseX, mouseY)
-        let hammerDir = getDir(hammerCenter.x, hammerCenter.y, mouseX, mouseY)
-        let mod = 1
+
+        let hammerDir = getDir(hammerCenter.x, hammerCenter.y, mouseX, mouseY);
+        let mod = 1;
+
         if (getDist(hammerCenter.x + Math.sin(hammerDir) * -25,
             hammerCenter.y + Math.cos(hammerDir) * -25, startX, startY - 23) >
             getDist(hammerCenter.x + Math.sin(hammerDir) * 25,
-                hammerCenter.y + Math.cos(hammerDir) * 25, startX, startY - 23)) mod = -1
-        this.handle.attr("x1", hammerCenter.x + Math.sin(hammerDir) * 25 * mod)
-        this.handle.attr("y1", hammerCenter.y + Math.cos(hammerDir) * 25 * mod)
-        this.handle.attr("x2", hammerCenter.x + Math.sin(hammerDir) * -25 * mod)
-        this.handle.attr("y2", hammerCenter.y + Math.cos(hammerDir) * -25 * mod)
+                hammerCenter.y + Math.cos(hammerDir) * 25, startX, startY - 23)) {
+            mod = -1;
+        }
 
+        this.hammerCenter = hammerCenter;
+        this.handleStart = {
+            x: hammerCenter.x + Math.sin(hammerDir) * 25 * mod,
+            y: hammerCenter.y + Math.cos(hammerDir) * 25 * mod
+        };
+        this.handleEnd = {
+            x: hammerCenter.x + Math.sin(hammerDir) * -25 * mod,
+            y: hammerCenter.y + Math.cos(hammerDir) * -25 * mod
+        };
     }
+
     touching(box) {
-        if ((box.x <= this.box().x2 && box.x2 >= this.box().x) && (box.y <= this.box().y2 && box.y2 >= this.box().y)) { return true }
+        let playerBox = this.box();
+        if ((box.x <= playerBox.x2 && box.x2 >= playerBox.x) &&
+            (box.y <= playerBox.y2 && box.y2 >= playerBox.y)) {
+            return true;
+        }
     }
+
     touchingHammer(box) {
-        if ((box.x <= this.hammerBox().x2 && box.x2 >= this.hammerBox().x) && (box.y <= this.hammerBox().y2 && box.y2 >= this.hammerBox().y)) { return true }
-        let dxMid, dyMid
-        dxMid = (this.prevPos.x - this.hammer.cx()) / 2
-        dyMid = (this.prevPos.y - this.hammer.cy()) / 2
-        if ((box.x <= this.hammerBox().x2 + dxMid && box.x2 >= this.hammerBox().x + dxMid) && (box.y <= this.hammerBox().y2 + dyMid && box.y2 >= this.hammerBox().y + dyMid)) return true
+        let hammerBox = this.hammerBox();
+        if ((box.x <= hammerBox.x2 && box.x2 >= hammerBox.x) &&
+            (box.y <= hammerBox.y2 && box.y2 >= hammerBox.y)) {
+            return true;
+        }
+
+        let dxMid, dyMid;
+        dxMid = (this.prevPos.x - this.hammerCenter.x) / 2;
+        dyMid = (this.prevPos.y - this.hammerCenter.y) / 2;
+
+        if ((box.x <= hammerBox.x2 + dxMid && box.x2 >= hammerBox.x + dxMid) &&
+            (box.y <= hammerBox.y2 + dyMid && box.y2 >= hammerBox.y + dyMid)) {
+            return true;
+        }
     }
+
     getHammerDiff(box) {
-        let y1, x1, y2, x2
-        y1 = -box.y + this.hammerBox().y2
-        y2 = box.y2 - this.hammerBox().y
-        x1 = -box.x + this.hammerBox().x2
-        x2 = box.x2 - this.hammerBox().x
-        let arr = [y1, y2, x1, x2]
-        let min = Math.min(...arr)
-        if (min === y1) return { y: min }
-        if (min === y2) return { y: -min }
-        if (min === x1) return { x: -min }
-        if (min === x2) return { x: min }
+        let hammerBox = this.hammerBox();
+        let y1, x1, y2, x2;
+        y1 = -box.y + hammerBox.y2;
+        y2 = box.y2 - hammerBox.y;
+        x1 = -box.x + hammerBox.x2;
+        x2 = box.x2 - hammerBox.x;
+        let arr = [y1, y2, x1, x2];
+        let min = Math.min(...arr);
+        if (min === y1) return { y: min };
+        if (min === y2) return { y: -min };
+        if (min === x1) return { x: -min };
+        if (min === x2) return { x: min };
     }
+
     getBoxDiff(box) {
-        let y1, x1, y2, x2
-        y1 = Math.abs(-box.y + this.box().y2)
-        y2 = Math.abs(box.y2 - this.box().y)
-        x1 = Math.abs(-box.x + this.box().x2)
-        x2 = Math.abs(box.x2 - this.box().x)
-        let arr = [y1, y2, x1, x2]
-        let min = Math.min(...arr)
-        if (min === y1) return { y: min }
-        if (min === y2) return { y: -min }
-        if (min === x1) return { x: -min }
-        if (min === x2) return { x: min }
+        let playerBox = this.box();
+        let y1, x1, y2, x2;
+        y1 = Math.abs(-box.y + playerBox.y2);
+        y2 = Math.abs(box.y2 - playerBox.y);
+        x1 = Math.abs(-box.x + playerBox.x2);
+        x2 = Math.abs(box.x2 - playerBox.x);
+        let arr = [y1, y2, x1, x2];
+        let min = Math.min(...arr);
+        if (min === y1) return { y: min };
+        if (min === y2) return { y: -min };
+        if (min === x1) return { x: -min };
+        if (min === x2) return { x: min };
     }
+
     constructor() {
-        this.pot = draw.rect(20, 20).center(startX, startY).fill("#333")
-        this.body = draw.rect(15, 20).center(startX, startY - 15).fill("#225")
-        this.chin = draw.rect(4, 8).center(startX + 2, startY - 26).fill("#ddb")
-        this.skull = draw.rect(8, 8).center(startX, startY - 29).fill("#ddb")
-        this.eye = draw.rect(3, 2).center(startX + 2.5, startY - 30).fill("#000")
-        this.head = draw.group()
-        this.head.add(this.chin)
-        this.head.add(this.skull)
-        this.head.add(this.eye)
-        this.shirtBottom = draw.ellipse(15, 7).center(startX, startY - 5).fill("#225")
-        this.arms = {
-            ul: draw.line(0, 0, 0, 10).move(startX - 5.5, startY - 43).stroke({
-                width: 4, color: '#ddb'
-            }),
-            ur: draw.line(0, 0, 0, 10).move(startX + 5.5, startY - 43).stroke({
-                width: 4, color: '#ddb'
-            }),
-            bl: draw.line(0, 0, 0, 10).move(startX - 5.5, startY - 33).stroke({
-                width: 4, color: '#ddb'
-            }),
-            br: draw.line(0, 0, 0, 10).move(startX + 5.5, startY - 33).stroke({
-                width: 4, color: '#ddb'
-            }),
-        }
-        this.handle = draw.line(0, 0, 0, 50).center(startX, startY - 53).stroke({
-            width: 4, color: '#841'
-        })
-        this.hammer = draw.rect(10, 7).center(0, 50).fill("#666")
-        this.xVel = 0
-        this.yVel = 0
-        this.prevPos = { x: null, y: null }
-        this.box = function () {
-            return {
-                x: this.pot.bbox().x - origin.x(),
-                x2: this.pot.bbox().x2 - origin.x(),
-                y: this.pot.bbox().y - origin.y(),
-                y2: this.pot.bbox().y2 - origin.y(),
-            }
-        }
-        this.hammerBox = function () {
-            return {
-                x: this.hammer.bbox().x - origin.x(),
-                x2: this.hammer.bbox().x2 - origin.x(),
-                y: this.hammer.bbox().y - origin.y(),
-                y2: this.hammer.bbox().y2 - origin.y(),
-            }
-        }
+        this.xVel = 0;
+        this.yVel = 0;
+        this.prevPos = { x: null, y: null };
+        this.hammerCenter = { x: startX, y: startY - 53 };
+        this.handleStart = { x: startX, y: startY - 28 };
+        this.handleEnd = { x: startX, y: startY - 78 };
+    }
+
+    box() {
+        return {
+            x: startX - 10 - mapOffsetX,
+            x2: startX + 10 - mapOffsetX,
+            y: startY - 10 - mapOffsetY,
+            y2: startY + 10 - mapOffsetY,
+        };
+    }
+
+    hammerBox() {
+        return {
+            x: this.hammerCenter.x - 5 - mapOffsetX,
+            x2: this.hammerCenter.x + 5 - mapOffsetX,
+            y: this.hammerCenter.y - 3.5 - mapOffsetY,
+            y2: this.hammerCenter.y + 3.5 - mapOffsetY,
+        };
+    }
+
+    draw() {
+
+        ctx.fillStyle = "#333";
+        ctx.fillRect(startX - 10, startY - 10, 20, 20);
+
+
+        ctx.fillStyle = "#225";
+        ctx.fillRect(startX - 7.5, startY - 25, 15, 20);
+
+
+        ctx.fillStyle = "#ddb";
+        ctx.fillRect(startX, startY - 30, 4, 8);
+
+
+        ctx.fillStyle = "#ddb";
+        ctx.fillRect(startX - 4, startY - 37, 8, 8);
+
+
+        ctx.fillStyle = "#000";
+        ctx.fillRect(startX + 1, startY - 32, 3, 2);
+
+
+        ctx.fillStyle = "#225";
+        ctx.beginPath();
+        ctx.ellipse(startX, startY - 5, 7.5, 3.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#ddb';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+
+
+        ctx.beginPath();
+        ctx.moveTo(startX - 5.5, startY - 43);
+        ctx.lineTo(startX - 5.5, startY - 33);
+        ctx.stroke();
+
+
+        ctx.beginPath();
+        ctx.moveTo(startX + 5.5, startY - 43);
+        ctx.lineTo(startX + 5.5, startY - 33);
+        ctx.stroke();
+
+
+        ctx.beginPath();
+        ctx.moveTo(startX - 5.5, startY - 33);
+        ctx.lineTo(startX - 5.5, startY - 23);
+        ctx.stroke();
+
+
+        ctx.beginPath();
+        ctx.moveTo(startX + 5.5, startY - 33);
+        ctx.lineTo(startX + 5.5, startY - 23);
+        ctx.stroke();
+
+ 
+        ctx.strokeStyle = '#841';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(this.handleStart.x, this.handleStart.y);
+        ctx.lineTo(this.handleEnd.x, this.handleEnd.y);
+        ctx.stroke();
+
+
+        ctx.fillStyle = "#666";
+        ctx.fillRect(this.hammerCenter.x - 5, this.hammerCenter.y - 3.5, 10, 7);
     }
 }
 
-var player = new Player()
-var ground = new Obstacle(-10000, 500, 20000, 1000)
-new Obstacle(200, 450, 100, 50)
-new Obstacle(100, 400, 100, 100)
-new Obstacle(-900, 400, 1000, 100)
-new Obstacle(100, 350, 100, 150)
-new Obstacle(550, 400, 150, 100)
-new Obstacle(650, 450, 40, 50)
-new Obstacle(400, 470, 300, 30)
-new Obstacle(800, 400, 100, 100)
-new Obstacle(1900, 400, 1000, 100)
-var canDo = true
+var player = new Player();
+var obstacles = [];
+
+
+obstacles.push(new Obstacle(-10000, 500, 20000, 1000)); // ground
+obstacles.push(new Obstacle(200, 450, 100, 50));
+obstacles.push(new Obstacle(100, 400, 100, 100));
+obstacles.push(new Obstacle(-900, 400, 1000, 100));
+obstacles.push(new Obstacle(100, 350, 100, 150));
+obstacles.push(new Obstacle(550, 400, 150, 100));
+obstacles.push(new Obstacle(650, 450, 40, 50));
+obstacles.push(new Obstacle(400, 470, 300, 30));
+obstacles.push(new Obstacle(800, 400, 100, 100));
+obstacles.push(new Obstacle(1900, 400, 1000, 100));
+
+var canDo = true;
+
 function update(progress) {
-    player.update()
+    player.update();
     if (false) {
         if (canDo) {
-            console.log(Math.random())
-            canDo = false
+            console.log(Math.random());
+            canDo = false;
         }
+    } else {
+        canDo = true;
     }
-    else canDo = true
 }
-var looping = 1
+
+function draw() {
+ 
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawSky();
+    drawStars();
+    drawMoon();
+    drawClouds();
+
+    obstacles.forEach(obstacle => obstacle.draw());
+
+
+    player.draw();
+}
+
+var looping = true;
+
 function toggleLoop() {
-    looping = !looping
+    looping = !looping;
     if (looping) {
-        window.requestAnimationFrame(loop)
+        window.requestAnimationFrame(loop);
     }
 }
 
 function loop(timestamp) {
-    var progress = timestamp - lastRender
-    update(progress)
-    lastRender = timestamp
+    var progress = timestamp - lastRender;
+    update(progress);
+    draw();
+    lastRender = timestamp;
     if (looping) {
-        window.requestAnimationFrame(loop)
-    }
-}
-var lastRender = 0
-window.requestAnimationFrame(loop)
-=======
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-const CW = canvas.width = 800
-const CH = canvas.height = 700
-
-let gameSpeed = 4;
-
-const back1 = new Image();
-back1.src = './assets/layer-1.png';
-const back2 = new Image();
-back2.src = './assets/layer-2.png';
-const back3 = new Image();
-back3.src = './assets/layer-3.png';
-const back4 = new Image();
-back4.src = './assets/layer-4.png';
-const back5 = new Image();
-back5.src = './assets/layer-5.png';
-
-class Layer {
-    constructor(image , speedMod) {
-        this.x = 0;
-        this.y =0;
-        this.w = 2400;
-        this.h = 700;
-        this.x2 = this.w;
-        this.image = image;
-        this.speedMod = speedMod;
-        this.speed = this.speedMod * gameSpeed;
-    }
-    update(){
-        this.speed = this.speedMod * gameSpeed;
-        if(this.x < -this.w){ this.x = this.w - gameSpeed + this.x2}
-        if(this.x2 < -this.w){ this.x2 = this.w - gameSpeed + this.x}
-        this.x = Math.floor(this.x -this.speed)
-        this.x2 = Math.floor(this.x2 -this.speed)
-    }
-    draw(){
-        ctx.drawImage(this.image,this.x , this.y , this.w , this.h)
-        ctx.drawImage(this.image,this.x2 , this.y , this.w , this.h)
+        window.requestAnimationFrame(loop);
     }
 }
 
-const layer1 = new Layer(back1,0.2);
-const layer2 = new Layer(back2,0.4);
-const layer3 = new Layer(back3,0.6);
-const layer5 = new Layer(back5,1);
+var lastRender = 0;
+window.requestAnimationFrame(loop);
 
-const layers = [layer1,layer2,layer3,layer5];
-
-function anim(){
-    ctx.clearRect(0,0,CW,CH);
-    layers.forEach(ob =>{
-        ob.update();
-        ob.draw();
-    })
-    requestAnimationFrame(anim);
-}
-//feature1 popup message
-class FallMessage {
-    constructor() {
-        this.messages = [
-            "Oops!you fall!",
-            "beter luck next time!",
-            "you lose!",
-            "gravity wins!"
-
-        ];
-        this.popup = document.getElementById("popup");
-    }
-    show() {
-        const msg = this.messages[Math.floor(Math.random() * this.messages.length)];
-        this.popup.innerText = msg;
-        this.popup.style.display = "block";
-        setTimeout(() => this.popup.style.display = "none", 2000);
-    }
-}
-if (player.isFalling()) {
-    FallMessage.show();
-}
-//feature2 sound effect
-const hammersound =[new Audio(), new Audio(), new Audio()];
-function hammercollision(){
-    const sound = hammersound[Math.floor(Math.random() * hammersound.length)]; 
-    sound.currentTime = 0 ; 
-    sound.play();
-}
-anim();
-
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    startX = window.innerWidth / 2;
+    startY = window.innerHeight / 1.5;
+});
