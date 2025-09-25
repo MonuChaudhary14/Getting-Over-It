@@ -1,32 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Getting Over It</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="style.css">
-    <link rel="shortcut icon" href="./Images/fav-icon.png" type="image/x-icon">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Getting Over It</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="shortcut icon" href="./assets/fav-icon.png" type="image/x-icon">
 </head>
 <body>
 
-    <canvas id = "canvas"></canvas>
-    <script src = "script.js"></script>
+  <div class="startingscreen">
+    <h1 class="title">Getting Over It</h1>
 
-</head>
-<body>
-    <div id="gameContainer">
-        <canvas id="canvas" width="1000" height="600"></canvas>
-        <script src="logic.js"></script>
-        <div id="ui">
-            <div>Height: <span id="height">0</span>m</div>
-            <div>Time: <span id="time">0:00</span></div>
-        </div>
-        
-        <div id="instructions">
-            Move mouse to swing hammer
-        </div>
+    <div class="how-to-play-container">
+      <p>Use your <span class="mouse-button">mouse</span> to swing the hammer.<br>
+      Climb the obstacles and reach the top.<br>
+      Don’t fall!</p>
+
+      <button class="button play-button">PLAY</button>
     </div>
 
+  </div>
+
+  <div class="game-container hidden">
+    <canvas id="gameCanvas" width="1000" height="600"></canvas>
+
+    <div class="ui">
+      <div>Height: <span class="height">0</span>m</div>
+      <div>Time: <span class="time">0:00</span></div>
+    </div>
+
+    <div class="instructions">
+      Move mouse to swing hammer
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
