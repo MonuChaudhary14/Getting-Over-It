@@ -1,9 +1,69 @@
 var mouseX, mouseY, mouseDown;
 mouseX = 0;
 mouseY = 0;
-var canvas = document.getElementById('gameCanvas');
-var ctx = canvas.getContext('2d');
+const canvas = document.getElementById('gameCanvas');
+const area = canvas.getContext('2d');
 
+class GameMap {
+    constructor() {
+        this.groundHeight = 50;
+        this.platforms = [];
+        this.initializePlatfrom();
+    }
+    initializePlatfrom() {
+        this.platforms = [
+            { x: -20, y: 0, width: 5000, height: this.groundHeight },
+            { x: 200, y: 0, width: 150, height: 80 },
+            { x: 370, y: 0, width: 160, height: 140 },
+            { x: 550, y: 0, width: 150, height: 100 },
+            { x: 720, y: 0, width: 140, height: 180 },
+            { x: 880, y: 0, width: 150, height: 220 },
+            { x: 1060, y: 0, width: 160, height: 150 },
+            { x: 1240, y: 0, width: 140, height: 200 },
+            { x: 1400, y: 0, width: 150, height: 250 },
+            { x: 1580, y: 0, width: 160, height: 170 },
+            { x: 1750, y: 0, width: 140, height: 230 },
+            { x: 1920, y: 0, width: 150, height: 200 },
+            { x: 2100, y: 0, width: 140, height: 260 },
+            { x: 2280, y: 0, width: 160, height: 180 },
+            { x: 2460, y: 0, width: 150, height: 240 },
+            { x: 2650, y: 0, width: 140, height: 200 },
+            { x: 2820, y: 0, width: 150, height: 260 },
+            { x: 3000, y: 0, width: 140, height: 220 },
+            { x: 3170, y: 0, width: 160, height: 280 },
+            { x: 3380, y: 0, width: 150, height: 240 },
+        ];
+    }
+    updatePlatformsPositions() {
+        const starting_Y = canvas.height - this.groundHeight;
+        this.platforms[0].y = starting_Y;
+        this.platforms[1].y = starting_Y - 80;
+        this.platforms[2].y = starting_Y - 140;
+        this.platforms[3].y = starting_Y - 100;
+        this.platforms[4].y = starting_Y - 180;
+        this.platforms[5].y = starting_Y - 220;
+        this.platforms[6].y = starting_Y - 150;
+        this.platforms[7].y = starting_Y - 200;
+        this.platforms[8].y = starting_Y - 250;
+        this.platforms[9].y = starting_Y - 170;
+        this.platforms[10].y = starting_Y - 230;
+        this.platforms[11].y = starting_Y - 200;
+        this.platforms[12].y = starting_Y - 260;
+        this.platforms[13].y = starting_Y - 180;
+        this.platforms[14].y = starting_Y - 240;
+        this.platforms[15].y = starting_Y - 200;
+        this.platforms[16].y = starting_Y - 260;
+        this.platforms[17].y = starting_Y - 220;
+        this.platforms[18].y = starting_Y - 280;
+        this.platforms[19].y = starting_Y - 240;
+    }
+    draw(playerPositionX, playerPositionY) {
+        area.fillStyle = '#886633';
+        this.platforms.forEach(platform => {
+            area.fillRect(platform.x - playerPositionX, platform.y - playerPositionY, platform.width, platform.height);
+        });
+    }
+}
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
