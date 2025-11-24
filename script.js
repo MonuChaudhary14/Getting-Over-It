@@ -27,7 +27,7 @@ class GameMap {
     }
 
     draw(playerPositionX, playerPositionY) {
-        area.fillStyle = '#548833ff';
+        area.fillStyle = '#20420cff';
         this.platforms.forEach(p => {
             area.fillRect(p.x - playerPositionX, p.y - playerPositionY, p.width, p.height);
         });
@@ -66,32 +66,64 @@ let playerPositionY = 0;
 const gravity = 0.8;
 
 function drawPlayer(startX, startY) {
-    area.fillStyle = "#282222ff";
-    area.fillRect(startX - 10, startY - 10, 20, 20);
 
-    area.fillStyle = "rgba(36, 36, 118, 1)";
-    area.fillRect(startX - 7.5, startY - 25, 15, 20);
-
-    area.fillStyle = "#b0b07bff";
-    area.fillRect(startX, startY - 30, 4, 8);
-
-    area.fillStyle = "#ddb";
-    area.fillRect(startX - 4, startY - 37, 8, 8);
-
-    area.fillStyle = "black";
-    area.fillRect(startX + 1, startY - 32, 3, 2);
-
-    area.strokeStyle = '#cbcbb1ff';
-    area.lineWidth = 4;
-
+    area.fillStyle = "#2b2b2b";
     area.beginPath();
-    area.moveTo(startX - 5.5, startY - 43);
-    area.lineTo(startX - 5.5, startY - 23);
+    area.ellipse(startX, startY - 10, 28, 18, 0, 0, Math.PI * 2);
+    area.fill();
+
+    area.fillStyle = "#3c3c3c";
+    area.beginPath();
+    area.ellipse(startX, startY - 23, 34, 10, 0, 0, Math.PI * 2);
+    area.fill();
+
+    area.fillStyle = "#d8b08a";
+    area.beginPath();
+    area.ellipse(startX, startY - 45, 26, 18, 0, 0, Math.PI * 2);
+    area.fill();
+
+    area.strokeStyle = "#c0926e";
+    area.lineWidth = 2;
+    area.beginPath();
+    area.moveTo(startX - 10, startY - 48);
+    area.lineTo(startX - 4, startY - 36);
     area.stroke();
 
+    area.fillStyle = "#d0a67a";
     area.beginPath();
-    area.moveTo(startX + 5.5, startY - 43);
-    area.lineTo(startX + 5.5, startY - 23);
+    area.arc(startX, startY - 80, 15, 0, Math.PI * 2);
+    area.fill();
+
+    area.fillStyle = "rgba(255,255,255,0.20)";
+    area.beginPath();
+    area.arc(startX - 4, startY - 86, 10, 0, Math.PI * 2);
+    area.fill();
+
+    area.fillStyle = "rgba(90,70,50,0.35)";
+    area.beginPath();
+    area.arc(startX, startY - 75, 12, Math.PI * 0.15, Math.PI * 0.85);
+    area.fill();
+
+    area.fillStyle = "black";
+    area.beginPath();
+    area.arc(startX - 5, startY - 84, 2.5, 0, Math.PI * 2);
+    area.fill();
+
+    area.beginPath();
+    area.arc(startX + 5, startY - 84, 2.5, 0, Math.PI * 2);
+    area.fill();
+
+    area.strokeStyle = "black";
+    area.lineWidth = 2;
+    area.beginPath();
+    area.moveTo(startX, startY - 82);
+    area.lineTo(startX, startY - 78);
+    area.stroke();
+
+    area.strokeStyle = "black";
+    area.lineWidth = 2;
+    area.beginPath();
+    area.arc(startX, startY - 72, 4, 0, Math.PI);
     area.stroke();
 }
 
@@ -112,7 +144,7 @@ canvas.addEventListener('mousemove', (e) => {
     mouse_position_X = e.clientX - canvas_size.left;
     mouse_position_Y = e.clientY - canvas_size.top;
     const playerScreenX = player.x - playerPositionX + player.width / 2;
-    const playerScreenY = player.y - playerPositionY + player.height - 15;
+    const playerScreenY = player.y - playerPositionY + player.height - 35;
     const dx = mouse_position_X - playerScreenX;
     const dy = mouse_position_Y - playerScreenY;
     hammer.angle = Math.atan2(dy, dx);
@@ -120,7 +152,7 @@ canvas.addEventListener('mousemove', (e) => {
 
 function updateHammer() {
     const playerScreenX = player.x - playerPositionX + player.width / 2;
-    const playerScreenY = player.y - playerPositionY + player.height - 15;
+    const playerScreenY = player.y - playerPositionY + player.height - 35;
     hammer.hammer_handle_start.x = playerScreenX;
     hammer.hammer_handle_start.y = playerScreenY;
     hammer.hammer_handle_end.x = playerScreenX + Math.cos(hammer.angle) * hammer.length;
