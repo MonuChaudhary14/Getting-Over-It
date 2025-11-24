@@ -280,7 +280,13 @@ function drawHammer() {
 }
 
 function draw() {
-    area.clearRect(0, 0, canvas.width, canvas.height);
+
+    const gradient = area.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, "#87CEEB");
+    gradient.addColorStop(1, "#ffffff");
+    area.fillStyle = gradient;
+    area.fillRect(0, 0, canvas.width, canvas.height);
+
     gameMap.draw(playerPositionX, playerPositionY);
     drawPlayer(player.x - playerPositionX + player.width / 2, player.y - playerPositionY + player.height);
     drawHammer();
