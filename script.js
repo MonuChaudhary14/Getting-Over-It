@@ -34,16 +34,22 @@ class GameMap {
     }
 }
 
-const player = {
-    x: 50,
-    y: 0,
-    width: 30,
-    height: 40,
-    speed: 5,
-    velocityX: 0,
-    velocityY: 0,
-    jumping: false,
-};
+class Player{
+
+    constructor(){
+        this.x = 50;
+        this.y = 0;
+        this.width = 30;
+        this.height = 40;
+        this.speed = 5;
+        this.velocityX = 0;
+        this.velocityY = 0;
+        this.jumping = false
+    }
+
+}
+
+const player = new Player();
 
 let gameMap = null;
 
@@ -57,7 +63,7 @@ resize();
 
 let playerPositionX = 0;
 let playerPositionY = 0;
-const gravity = 0.9;
+const gravity = 0.8;
 
 function drawPlayer(startX, startY) {
     area.fillStyle = "#282222ff";
