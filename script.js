@@ -187,6 +187,34 @@ function hammerCollision() {
     return null;
 }
 
+function applyHammerPhysics() {
+
+    const hit = hammerCollision();
+    if (!hit) return;
+
+    const tipX = hammer.hammer_handle_end.x + playerPositionX;
+    const tipY = hammer.hammer_handle_end.y + playerPositionY;
+
+    const prevX = hammer.hammer_handle_end.x - (hammer.hammerCenter.x - hammer.prevCenter.x) + playerPositionX;
+    const prevY = hammer.hammer_handle_end.y - (hammer.hammerCenter.y - hammer.prevCenter.y) + playerPositionY;
+
+    const dx = tipX - prevX;
+    const dy = tipY - prevY;
+
+    const pushPower = 0.25;
+    player.velocityX -= dx * pushPower;
+    player.velocityY -= dy * pushPower;
+
+    const maxSpeed = 12;
+    const speed = Math.hypot(player.velocityX, player.velocityY);
+
+    if (speed > maxSpeed) {
+        player.velocityX = (player.velocityX / speed) * maxSpeed;
+        player.velocityY = (player.velocityY / speed) * maxSpeed;
+    }
+}
+
+
 function updatePlayer() {
     player.velocityX *= 0.9;
     player.velocityY += gravity;
