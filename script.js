@@ -17,7 +17,7 @@ class GameMap {
     }
 
     insertPlatforms() {
-        this.offsetY = canvas.height; 
+        this.offsetY = canvas.height;
         this.platforms = this.platforms.map(p => ({
             x: p.x,
             y: p.y + this.offsetY,
@@ -34,9 +34,8 @@ class GameMap {
     }
 }
 
-class Player{
-
-    constructor(){
+class Player {
+    constructor() {
         this.x = 50;
         this.y = 0;
         this.width = 30;
@@ -44,13 +43,11 @@ class Player{
         this.speed = 5;
         this.velocityX = 0;
         this.velocityY = 0;
-        this.jumping = false
+        this.jumping = false;
     }
-
 }
 
 const player = new Player();
-
 let gameMap = null;
 
 function resize() {
@@ -66,7 +63,6 @@ let playerPositionY = 0;
 const gravity = 0.8;
 
 function drawPlayer(startX, startY) {
-
     area.fillStyle = "#2b2b2b";
     area.beginPath();
     area.ellipse(startX, startY - 10, 28, 18, 0, 0, Math.PI * 2);
@@ -128,7 +124,7 @@ function drawPlayer(startX, startY) {
 }
 
 const hammer = {
-    length: 120,
+    length: 90,
     angle: Math.PI / 4,
     hammer_handle_start: { x: 0, y: 0 },
     hammer_handle_end: { x: 0, y: 0 },
@@ -151,16 +147,58 @@ canvas.addEventListener('mousemove', (e) => {
 });
 
 function updateHammer() {
-    const playerScreenX = player.x - playerPositionX + player.width / 2;
-    const playerScreenY = player.y - playerPositionY + player.height - 35;
-    hammer.hammer_handle_start.x = playerScreenX;
-    hammer.hammer_handle_start.y = playerScreenY;
-    hammer.hammer_handle_end.x = playerScreenX + Math.cos(hammer.angle) * hammer.length;
-    hammer.hammer_handle_end.y = playerScreenY + Math.sin(hammer.angle) * hammer.length;
+    const px = player.x - playerPositionX + player.width / 2;
+    const py = player.y - playerPositionY + player.height - 35;
+
     hammer.prevCenter.x = hammer.hammerCenter.x;
     hammer.prevCenter.y = hammer.hammerCenter.y;
-    hammer.hammerCenter.x = playerScreenX + Math.cos(hammer.angle) * (hammer.length / 2);
-    hammer.hammerCenter.y = playerScreenY + Math.sin(hammer.angle) * (hammer.length / 2);
+
+    const targetX = px + Math.cos(hammer.angle) * hammer.length;
+    const targetY = py + Math.sin(hammer.angle) * hammer.length;
+
+    hammer.hammerCenter.x += (targetX - hammer.hammerCenter.x) * 0.2;
+    hammer.hammerCenter.y += (targetY - hammer.hammerCenter.y) * 0.2;
+
+    hammer.hammer_handle_end.x = hammer.hammerCenter.x;
+    hammer.hammer_handle_end.y = hammer.hammerCenter.y;
+
+    hammer.hammer_handle_start.x = px;
+    hammer.hammer_handle_start.y = py;
+}
+
+function resolveHammerPenetration() {
+    const r = 10;
+    for (const p of gameMap.platforms) {
+        const hxWorld = hammer.hammerCenter.x + playerPositionX;
+        const hyWorld = hammer.hammerCenter.y + playerPositionY;
+
+        const closestX = Math.max(p.x, Math.min(hxWorld, p.x + p.width));
+        const closestY = Math.max(p.y, Math.min(hyWorld, p.y + p.height));
+
+        let dx = hxWorld - closestX;
+        let dy = hyWorld - closestY;
+        const distSq = dx * dx + dy * dy;
+
+        if (distSq < r * r) {
+            const dist = Math.sqrt(distSq) || 0.0001;
+            const penetration = r - dist;
+
+            const nx = dx / dist;
+            const ny = dy / dist;
+
+            const pushX_world = nx * penetration;
+            const pushY_world = ny * penetration;
+
+            hammer.hammerCenter.x += pushX_world;
+            hammer.hammerCenter.y += pushY_world;
+
+            hammer.hammer_handle_end.x += pushX_world;
+            hammer.hammer_handle_end.y += pushY_world;
+
+            hammer.prevCenter.x += pushX_world;
+            hammer.prevCenter.y += pushY_world;
+        }
+    }
 }
 
 function limitVelocity(value, maxSpeed) {
@@ -170,17 +208,17 @@ function limitVelocity(value, maxSpeed) {
 }
 
 function hammerCollision() {
-    const hammer_boundry = {
+    const hb = {
         x: hammer.hammerCenter.x + playerPositionX - 5,
         y: hammer.hammerCenter.y + playerPositionY - 3.5,
         w: 10,
         h: 7
     };
-    for(const p of gameMap.platforms) {
-        if(!(hammer_boundry.x + hammer_boundry.w < p.x || 
-             hammer_boundry.x > p.x + p.width || 
-             hammer_boundry.y + hammer_boundry.h < p.y || 
-             hammer_boundry.y > p.y + p.height)) {
+    for (const p of gameMap.platforms) {
+        if (!(hb.x + hb.w < p.x ||
+              hb.x > p.x + p.width ||
+              hb.y + hb.h < p.y ||
+              hb.y > p.y + p.height)) {
             return p;
         }
     }
@@ -188,22 +226,31 @@ function hammerCollision() {
 }
 
 function applyHammerPhysics() {
-
     const hit = hammerCollision();
     if (!hit) return;
 
-    const tipX = hammer.hammer_handle_end.x + playerPositionX;
-    const tipY = hammer.hammer_handle_end.y + playerPositionY;
+    const hx = hammer.hammerCenter.x + playerPositionX;
+    const hy = hammer.hammerCenter.y + playerPositionY;
 
-    const prevX = hammer.hammer_handle_end.x - (hammer.hammerCenter.x - hammer.prevCenter.x) + playerPositionX;
-    const prevY = hammer.hammer_handle_end.y - (hammer.hammerCenter.y - hammer.prevCenter.y) + playerPositionY;
+    const px = hammer.prevCenter.x + playerPositionX;
+    const py = hammer.prevCenter.y + playerPositionY;
 
-    const dx = tipX - prevX;
-    const dy = tipY - prevY;
+    const dx = hx - px;
+    const dy = hy - py;
 
     const pushPower = 0.25;
     player.velocityX -= dx * pushPower;
     player.velocityY -= dy * pushPower;
+
+    const hammerSpeed = Math.hypot(dx, dy);
+
+    if (hammerSpeed < 1.0) {
+        player.velocityX *= 0.85;
+        player.velocityY *= 0.85;
+    } else if (hammerSpeed < 3.0) {
+        player.velocityX *= 0.92;
+        player.velocityY *= 0.92;
+    }
 
     const maxSpeed = 12;
     const speed = Math.hypot(player.velocityX, player.velocityY);
@@ -220,7 +267,7 @@ function updatePlayer() {
     player.velocityY += gravity;
     const hitPlatform = hammerCollision();
 
-    if(hitPlatform) {
+    if (hitPlatform) {
         const dx = hammer.hammerCenter.x - hammer.prevCenter.x;
         const dy = hammer.hammerCenter.y - hammer.prevCenter.y;
         player.velocityX -= dx * 0.2;
@@ -233,26 +280,28 @@ function updatePlayer() {
     player.x += player.velocityX;
     player.y += player.velocityY;
 
-    for(const p of gameMap.platforms) {
-        if(player.x + player.width > p.x &&
-           player.x < p.x + p.width &&
-           player.y + player.height > p.y &&
-           player.y < p.y + p.height) {
+    for (const p of gameMap.platforms) {
+        if (player.x + player.width > p.x &&
+            player.x < p.x + p.width &&
+            player.y + player.height > p.y &&
+            player.y < p.y + p.height) {
+            
             const overlapX1 = (p.x + p.width) - player.x;
             const overlapX2 = (player.x + player.width) - p.x;
             const overlapY1 = (p.y + p.height) - player.y;
             const overlapY2 = (player.y + player.height) - p.y;
             const minOverlapX = Math.min(overlapX1, overlapX2);
             const minOverlapY = Math.min(overlapY1, overlapY2);
-            if(minOverlapX < minOverlapY) {
-                if(overlapX1 < overlapX2) {
+
+            if (minOverlapX < minOverlapY) {
+                if (overlapX1 < overlapX2) {
                     player.x = p.x + p.width;
                 } else {
                     player.x = p.x - player.width;
                 }
                 player.velocityX = 0;
             } else {
-                if(overlapY1 < overlapY2) {
+                if (overlapY1 < overlapY2) {
                     player.y = p.y + p.height;
                     player.velocityY = 0;
                 } else {
@@ -266,19 +315,20 @@ function updatePlayer() {
 
     const mapWidth = 5000;
     const mapHeight = canvas.height;
-    if(player.x < 50) {
+
+    if (player.x < 50) {
         player.x = 50;
         player.velocityX = 0;
     }
-    if(player.x + player.width > mapWidth) {
+    if (player.x + player.width > mapWidth) {
         player.x = mapWidth - player.width;
         player.velocityX = 0;
     }
-    if(player.y < 0) {
+    if (player.y < 0) {
         player.y = 0;
         player.velocityY = 0;
     }
-    if(player.y + player.height > mapHeight) {
+    if (player.y + player.height > mapHeight) {
         player.y = mapHeight - player.height;
         player.velocityY = 0;
         player.jumping = false;
@@ -288,27 +338,25 @@ function updatePlayer() {
 function updateCamera() {
     playerPositionX = player.x - canvas.width / 2 + player.width / 2;
     playerPositionY = player.y - canvas.height / 2 + player.height / 2;
-    if(playerPositionX < 0) playerPositionX = 0;
-    if(playerPositionX > 2000 - canvas.width) playerPositionX = 2000 - canvas.width;
-    if(playerPositionY < 0) playerPositionY = 0;
+    if (playerPositionX < 0) playerPositionX = 0;
+    if (playerPositionX > 2000 - canvas.width) playerPositionX = 2000 - canvas.width;
+    if (playerPositionY < 0) playerPositionY = 0;
 }
 
 function drawHammer() {
-    const halfX = hammer.hammer_handle_start.x + Math.cos(hammer.angle) * (hammer.length / 2);
-    const halfY = hammer.hammer_handle_start.y + Math.sin(hammer.angle) * (hammer.length / 2);
     area.strokeStyle = 'rgba(177, 141, 41, 1)';
     area.lineWidth = 8;
     area.lineCap = 'round';
     area.beginPath();
     area.moveTo(hammer.hammer_handle_start.x, hammer.hammer_handle_start.y);
-    area.lineTo(halfX, halfY);
+    area.lineTo(hammer.hammerCenter.x, hammer.hammerCenter.y);
     area.stroke();
+
     area.fillStyle = 'rgba(51, 195, 185, 1)';
-    area.fillRect(halfX - 5, halfY - 3.5, 10, 7);
+    area.fillRect(hammer.hammerCenter.x - 5,hammer.hammerCenter.y - 3.5,10, 7);
 }
 
 function draw() {
-
     const gradient = area.createLinearGradient(0, 0, 0, canvas.height);
     gradient.addColorStop(0, "#87CEEB");
     gradient.addColorStop(1, "#ffffff");
@@ -316,12 +364,15 @@ function draw() {
     area.fillRect(0, 0, canvas.width, canvas.height);
 
     gameMap.draw(playerPositionX, playerPositionY);
-    drawPlayer(player.x - playerPositionX + player.width / 2, player.y - playerPositionY + player.height);
+    drawPlayer(player.x - playerPositionX + player.width / 2,player.y - playerPositionY + player.height);
     drawHammer();
 }
 
+
 function gameLoop() {
     updateHammer();
+    resolveHammerPenetration();
+    applyHammerPhysics();
     updatePlayer();
     updateCamera();
     draw();
@@ -330,21 +381,18 @@ function gameLoop() {
 
 async function loadMap() {
     try {
-        const response = await fetch("Map.json"); 
-        const mapJson = await response.json(); 
+        const response = await fetch("Map.json");
+        const mapJson = await response.json();
 
-        gameMap = new GameMap();  
+        gameMap = new GameMap();
 
         const objectLayer = mapJson.layers.find(
-            layer =>
-                 layer.name === "Object Layer 1" && layer.type === "objectgroup"
+            layer => layer.name === "Object Layer 1" && layer.type === "objectgroup"
         );
 
         if (objectLayer) {
             gameMap.loadPlatforms(objectLayer.objects);
             gameMap.insertPlatforms();
-        } else {
-            console.error("This layer is not present");
         }
 
         gameLoop();
@@ -354,7 +402,6 @@ async function loadMap() {
 }
 
 loadMap();
-
 
 const startScreen = document.querySelector(".startingscreen");
 const gameContainer = document.querySelector(".game-container");
